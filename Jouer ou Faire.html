@@ -1,0 +1,391 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Jouer ou Faire</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;800&display=swap">
+<style>
+/* Layout: one centered column. A permanent rule strip sits above the tabs, and the active exercise fills a single stage card.
+   Color carries meaning: blue = jouer à, orange = faire de, purple = jouer de. Green and red are only for right and wrong. */
+:root{
+  --bg:#f3f6ff; --surface:#ffffff; --ink:#14213d; --muted:#55607d; --line:#d6ddf2;
+  --team:#2f6bff; --team-bg:#e4ecff;
+  --solo:#e55a0a; --solo-bg:#ffe8d8;
+  --music:#7c3aed; --music-bg:#eee5ff;
+  --good:#12803f; --good-bg:#ddf4e6; --bad:#c92f2f; --bad-bg:#fde4e4;
+  --sun-bg:#fff0b8;
+  --font-display:'Fredoka','Trebuchet MS',system-ui,sans-serif;
+  --font-body:'Nunito',system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e1530; --surface:#172046; --ink:#eef1ff; --muted:#a6b0d2; --line:#2c386c;
+    --team:#7aa2ff; --team-bg:#1c2e66;
+    --solo:#ff9455; --solo-bg:#462a19;
+    --music:#b99aff; --music-bg:#32235f;
+    --good:#58d690; --good-bg:#12392a; --bad:#ff8080; --bad-bg:#44202a;
+    --sun-bg:#4a3f14;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e1530; --surface:#172046; --ink:#eef1ff; --muted:#a6b0d2; --line:#2c386c;
+  --team:#7aa2ff; --team-bg:#1c2e66;
+  --solo:#ff9455; --solo-bg:#462a19;
+  --music:#b99aff; --music-bg:#32235f;
+  --good:#58d690; --good-bg:#12392a; --bad:#ff8080; --bad-bg:#44202a;
+  --sun-bg:#4a3f14;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.5;
+  padding-block:24px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+h1{font-family:var(--font-display);font-weight:700;font-size:clamp(2.2rem,8vw,3.4rem);line-height:1.05;margin:0;letter-spacing:-.01em;text-wrap:balance}
+h1 .t{color:var(--team)} h1 .s{color:var(--solo)} h1 .o{color:var(--muted);font-weight:500}
+.sub{margin:6px 0 0;color:var(--muted);font-size:1.05rem}
+.rules{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.rule{border:2px solid var(--line);border-radius:14px;padding:12px 14px;min-width:0}
+.rule b{font-family:var(--font-display);font-size:1.25rem;display:block;line-height:1.2}
+.rule span{display:block;font-size:.92rem;color:var(--ink)}
+.rule small{display:block;color:var(--muted);font-size:.85rem;margin-top:4px}
+.rule.team{background:var(--team-bg);border-color:var(--team)} .rule.team b{color:var(--team)}
+.rule.solo{background:var(--solo-bg);border-color:var(--solo)} .rule.solo b{color:var(--solo)}
+.rule.music{background:var(--music-bg);border-color:var(--music)} .rule.music b{color:var(--music)}
+.exc{margin:0;font-size:.95rem;color:var(--muted)}
+.exc b{color:var(--ink)}
+.tabs{display:flex;flex-wrap:wrap;gap:8px}
+.tab{font:inherit;font-weight:800;font-size:.95rem;min-height:44px;padding:8px 16px;border-radius:999px;border:2px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.tab:hover{border-color:var(--team)}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.tab .badge{font-size:.78rem;font-weight:800;padding:2px 8px;border-radius:999px;background:var(--good-bg);color:var(--good)}
+.stage{background:var(--surface);border:2px solid var(--line);border-radius:22px;padding:clamp(16px,4vw,28px);display:flex;flex-direction:column;gap:18px;min-width:0}
+.prog{display:flex;align-items:center;gap:12px;font-size:.9rem;font-weight:800;color:var(--muted)}
+.bar{flex:1;height:10px;border-radius:99px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--team);border-radius:99px;transition:width .3s}
+.q{font-size:clamp(1.3rem,4.5vw,1.7rem);font-weight:800;line-height:1.35;margin:0;text-wrap:balance}
+.blank{display:inline-block;min-width:4.5ch;padding:0 6px;border-bottom:4px dashed var(--muted);text-align:center;color:var(--good)}
+.blank.bad{color:var(--bad)}
+.card{font-family:var(--font-display);font-size:clamp(1.8rem,7vw,2.6rem);font-weight:600;text-align:center;background:var(--sun-bg);border-radius:18px;padding:22px 12px;margin:0}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.opt{font:inherit;font-weight:800;font-size:1.1rem;min-height:56px;padding:10px 14px;border-radius:14px;border:2px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;text-align:center}
+.opt:hover:not(:disabled){border-color:var(--team);transform:translateY(-1px)}
+.opt:disabled{cursor:default}
+.opt.right{background:var(--good-bg);border-color:var(--good)}
+.opt.wrong{background:var(--bad-bg);border-color:var(--bad)}
+.opt.dim{opacity:.55}
+.opt.team{background:var(--team-bg);border-color:var(--team)}
+.opt.solo{background:var(--solo-bg);border-color:var(--solo)}
+.opt.music{background:var(--music-bg);border-color:var(--music)}
+.opt .t{display:block;font-family:var(--font-display);font-size:1.25rem}
+.opt .s{display:block;font-size:.82rem;font-weight:600;color:var(--muted)}
+.opt.team .t{color:var(--team)} .opt.solo .t{color:var(--solo)} .opt.music .t{color:var(--music)}
+.opt.right.team,.opt.right.solo,.opt.right.music{outline:4px solid var(--good);outline-offset:1px}
+.opt.wrong.team,.opt.wrong.solo,.opt.wrong.music{outline:4px solid var(--bad);outline-offset:1px}
+.entry{display:flex;gap:10px;flex-wrap:wrap}
+.entry input{flex:1 1 200px;min-width:0;font:inherit;font-size:1.15rem;font-weight:600;min-height:52px;padding:8px 14px;border-radius:14px;border:2px solid var(--line);background:var(--bg);color:var(--ink)}
+.entry input:focus{outline:3px solid var(--team);outline-offset:1px;border-color:var(--team)}
+.btn{font:inherit;font-weight:800;min-height:52px;padding:8px 22px;border-radius:14px;border:2px solid var(--ink);background:var(--ink);color:var(--bg);cursor:pointer}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+.btn.ghost:hover{border-color:var(--ink)}
+.btn:focus-visible,.opt:focus-visible,.tab:focus-visible,.pick:focus-visible{outline:3px solid var(--team);outline-offset:2px}
+.hint{margin:0;padding:10px 14px;border-radius:12px;background:var(--sun-bg);font-size:.95rem}
+.fb{border-radius:14px;padding:12px 16px;font-size:1rem}
+.fb.good{background:var(--good-bg);border:2px solid var(--good)}
+.fb.bad{background:var(--bad-bg);border:2px solid var(--bad)}
+.fb strong{display:block;font-family:var(--font-display);font-size:1.15rem}
+.match{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
+.col{display:flex;flex-direction:column;gap:10px;min-width:0}
+.pick{font:inherit;font-weight:800;font-size:1.05rem;min-height:52px;padding:8px 12px;border-radius:14px;border:2px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;overflow-wrap:anywhere}
+.pick:hover:not(:disabled){border-color:var(--team)}
+.pick.sel{background:var(--sun-bg);border-color:var(--ink)}
+.pick:disabled{cursor:default}
+.pick.team{background:var(--team-bg);border-color:var(--team)}
+.pick.solo{background:var(--solo-bg);border-color:var(--solo)}
+.pick.music{background:var(--music-bg);border-color:var(--music)}
+.pick.shake{animation:shake .35s;border-color:var(--bad)}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.mm{margin:0;color:var(--muted);font-weight:800}
+.done{display:flex;flex-direction:column;gap:14px;align-items:flex-start}
+.done .big{font-family:var(--font-display);font-size:clamp(2.6rem,12vw,4rem);font-weight:700;margin:0;line-height:1}
+.done p{margin:0}
+.done h3{font-family:var(--font-display);margin:6px 0 0;font-size:1.2rem}
+.done ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+@media (max-width:560px){
+  .rules{grid-template-columns:1fr}
+  .match{gap:10px}
+}
+@media (prefers-reduced-motion:reduce){
+  .opt:hover:not(:disabled){transform:none}
+  .pick.shake{animation:none}
+  .bar i{transition:none}
+}
+</style>
+
+<main class="wrap">
+  <header>
+    <h1><span class="t">Jouer</span> <span class="o">ou</span> <span class="s">Faire</span> ?</h1>
+    <p class="sub">Entraîne-toi pour le test : jouer à, faire de, jouer de.</p>
+  </header>
+
+  <section class="rules" aria-label="Rappel des règles">
+    <div class="rule team"><b>jouer à</b><span>sports d'équipe et jeux</span><small>au · à la · à l' · aux</small></div>
+    <div class="rule solo"><b>faire de</b><span>sports individuels et activités</span><small>du · de la · de l' · des</small></div>
+    <div class="rule music"><b>jouer de</b><span>instruments de musique</span><small>du · de la · de l'</small></div>
+  </section>
+  <p class="exc">Exceptions : on dit <b>jouer au tennis</b> et <b>jouer au golf</b>.</p>
+
+  <nav class="tabs" id="tabs" aria-label="Types d'exercices"></nav>
+  <section class="stage" id="stage"></section>
+</main>
+
+<script>
+(function(){
+  var stage=document.getElementById('stage'), tabsEl=document.getElementById('tabs');
+  var scores={}, current=0;
+
+  function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
+  function norm(s){return s.toLowerCase().replace(/[’‘`]/g,"'").replace(/[\s']/g,"")}
+  function blank(q,fill,cls){return q.replace("___",'<span class="blank '+(cls||"")+'">'+(fill||"&nbsp;&nbsp;&nbsp;")+'</span>')}
+
+  var CATS=[
+    {t:"jouer à",s:"équipe / jeu",cls:"team"},
+    {t:"faire de",s:"individuel / activité",cls:"solo"},
+    {t:"jouer de",s:"instrument",cls:"music"}
+  ];
+
+  /* ---------- Données ---------- */
+  var MC=[
+    {q:"Mon frère joue ___ hockey.",o:["au","du","de la"],a:0,why:"Le hockey est un sport d'équipe : <b>jouer à</b> → jouer <b>au</b> hockey."},
+    {q:"Elle fait ___ natation.",o:["du","de la","à la"],a:1,why:"La natation est un sport individuel : <b>faire de</b> → faire <b>de la</b> natation."},
+    {q:"Tu joues ___ piano ?",o:["au","du","de l'"],a:1,why:"Le piano est un instrument : <b>jouer de</b> → jouer <b>du</b> piano."},
+    {q:"Nous faisons ___ vélo.",o:["au","de la","du"],a:2,why:"Le vélo est une activité individuelle : faire <b>du</b> vélo."},
+    {q:"Ils jouent ___ cartes.",o:["des","aux","de"],a:1,why:"Les cartes sont un jeu : <b>jouer à</b> + les → jouer <b>aux</b> cartes."},
+    {q:"Je fais ___ athlétisme.",o:["de l'","du","de la"],a:0,why:"<i>Athlétisme</i> commence par une voyelle : faire <b>de l'</b>athlétisme."},
+    {q:"Vous ___ de la danse.",o:["faisez","faites","font"],a:1,why:"<b>Vous faites</b> : forme irrégulière de faire."},
+    {q:"Elles ___ du judo.",o:["fait","faisent","font"],a:2,why:"<b>Ils / elles font</b> : forme irrégulière de faire."},
+    {q:"Il joue ___ batterie.",o:["à la","de la","de l'"],a:1,why:"La batterie est un instrument : <b>jouer de</b> + la → jouer <b>de la</b> batterie."},
+    {q:"Nous jouons ___ échecs.",o:["aux","des","d'"],a:0,why:"Les échecs sont un jeu : jouer <b>aux</b> échecs."},
+    {q:"Il joue ___ tennis.",o:["du","de","au"],a:2,why:"Exception ! Le tennis est individuel, mais on dit <b>jouer au</b> tennis."},
+    {q:"Ils ___ aux jeux vidéo.",o:["font","jouent","jouons"],a:1,why:"Les jeux vidéo : <b>jouer à</b>. Ils → <b>jouent</b>."}
+  ];
+
+  var FILL=[
+    {q:"Nous ___ basket.",a:["jouons au"],h:"Sport d'équipe : jouer à. Sujet : nous."},
+    {q:"Elle ___ natation.",a:["fait de la"],h:"Sport individuel : faire de. Natation est féminin."},
+    {q:"Tu ___ guitare ?",a:["joues de la"],h:"Instrument : jouer de. Guitare est féminin."},
+    {q:"Ils ___ cartes.",a:["jouent aux"],h:"Un jeu : jouer à. Cartes est pluriel."},
+    {q:"Je ___ judo.",a:["fais du"],h:"Sport individuel : faire de. Judo est masculin."},
+    {q:"Vous ___ piano.",a:["jouez du"],h:"Instrument : jouer de. Piano est masculin."},
+    {q:"Il ___ athlétisme.",a:["fait de l'"],h:"Faire de + voyelle : de l'."},
+    {q:"Nous ___ échecs.",a:["jouons aux"],h:"Un jeu : jouer à. Échecs est pluriel."},
+    {q:"Elles ___ jeux vidéo.",a:["jouent aux"],h:"Un jeu : jouer à. Jeux vidéo est pluriel."},
+    {q:"Je ___ violon.",a:["joue du"],h:"Instrument : jouer de. Violon est masculin."},
+    {q:"Ils ___ randonnées.",a:["font des"],h:"Activité : faire de. Randonnées est pluriel."},
+    {q:"Tu ___ accordéon ?",a:["joues de l'"],h:"Instrument : jouer de + voyelle : de l'."}
+  ];
+
+  var CONJ=[
+    {q:"Je ___ (jouer) au foot.",a:["joue"]},
+    {q:"Tu ___ (faire) du yoga.",a:["fais"]},
+    {q:"Elle ___ (faire) de la danse.",a:["fait"]},
+    {q:"Nous ___ (faire) du ski.",a:["faisons"]},
+    {q:"Vous ___ (faire) du sport.",a:["faites"]},
+    {q:"Ils ___ (faire) de la natation.",a:["font"]},
+    {q:"Vous ___ (jouer) du violon.",a:["jouez"]},
+    {q:"Elles ___ (jouer) aux cartes.",a:["jouent"]},
+    {q:"Nous ___ (jouer) au volley.",a:["jouons"]},
+    {q:"On ___ (faire) du vélo.",a:["fait"]}
+  ];
+
+  var POOL=[
+    {w:"le hockey",c:0,p:"jouer au hockey"},{w:"le basket",c:0,p:"jouer au basket"},
+    {w:"le rugby",c:0,p:"jouer au rugby"},{w:"le volley",c:0,p:"jouer au volley"},
+    {w:"les cartes",c:0,p:"jouer aux cartes"},{w:"les échecs",c:0,p:"jouer aux échecs"},
+    {w:"les jeux vidéo",c:0,p:"jouer aux jeux vidéo"},{w:"la pétanque",c:0,p:"jouer à la pétanque"},
+    {w:"le tennis",c:0,p:"jouer au tennis",n:" (exception : sport individuel, mais on dit jouer au)"},
+    {w:"le judo",c:1,p:"faire du judo"},{w:"la natation",c:1,p:"faire de la natation"},
+    {w:"le vélo",c:1,p:"faire du vélo"},{w:"l'athlétisme",c:1,p:"faire de l'athlétisme"},
+    {w:"la danse",c:1,p:"faire de la danse"},{w:"le yoga",c:1,p:"faire du yoga"},
+    {w:"les randonnées",c:1,p:"faire des randonnées"},{w:"le ski",c:1,p:"faire du ski"},
+    {w:"le piano",c:2,p:"jouer du piano"},{w:"la guitare",c:2,p:"jouer de la guitare"},
+    {w:"la flûte",c:2,p:"jouer de la flûte"},{w:"la batterie",c:2,p:"jouer de la batterie"},
+    {w:"le violon",c:2,p:"jouer du violon"},{w:"l'accordéon",c:2,p:"jouer de l'accordéon"},
+    {w:"le saxophone",c:2,p:"jouer du saxophone"}
+  ];
+
+  var PAIRS=[
+    {id:0,w:"le hockey",k:"jouer au",c:0},{id:1,w:"la natation",k:"faire de la",c:1},
+    {id:2,w:"le piano",k:"jouer du",c:2},{id:3,w:"l'athlétisme",k:"faire de l'",c:1},
+    {id:4,w:"les cartes",k:"jouer aux",c:0},{id:5,w:"la guitare",k:"jouer de la",c:2},
+    {id:6,w:"le judo",k:"faire du",c:1},{id:7,w:"l'accordéon",k:"jouer de l'",c:2}
+  ];
+
+  var MODES=[
+    {key:"mc",label:"Choix multiple",run:function(){quiz("mc",buildMC())}},
+    {key:"fill",label:"Remplir le blanc",run:function(){quiz("fill",FILL.map(function(x){return {q:x.q,a:x.a,h:x.h,input:true,why:x.q.replace("___","<b>"+x.a[0]+"</b>")}}))}},
+    {key:"match",label:"Associer",run:function(){match()}},
+    {key:"sort",label:"Trier",run:function(){quiz("sort",buildSort())}},
+    {key:"conj",label:"Conjuguer",run:function(){quiz("conj",CONJ.map(function(x){return {q:x.q,a:x.a,h:"Pense au sujet et à l'infinitif entre parenthèses.",input:true,why:x.q.replace(/ \((jouer|faire)\)/,"").replace("___","<b>"+x.a[0]+"</b>")}}))}}
+  ];
+
+  function buildMC(){
+    return shuffle(MC).map(function(it){
+      var opts=shuffle(it.o.map(function(t,k){return {t:t,ok:k===it.a}}));
+      return {q:it.q,opts:opts,why:it.why,rightText:it.o[it.a]};
+    });
+  }
+  function buildSort(){
+    return shuffle(POOL).slice(0,16).map(function(x){
+      return {big:x.w,q:"Quelle structure va avec ce mot ?",
+        opts:CATS.map(function(c,k){return {t:c.t,s:c.s,cls:c.cls,ok:k===x.c}}),
+        why:"<b>"+x.p+"</b>"+(x.n||""),sort:true};
+    });
+  }
+
+  /* ---------- Onglets ---------- */
+  function drawTabs(){
+    tabsEl.innerHTML="";
+    MODES.forEach(function(m,i){
+      var b=document.createElement("button");
+      b.className="tab";b.type="button";
+      b.setAttribute("aria-selected",i===current?"true":"false");
+      b.innerHTML=m.label+(scores[m.key]?' <span class="badge">'+scores[m.key]+'</span>':"");
+      b.addEventListener("click",function(){go(i)});
+      tabsEl.appendChild(b);
+    });
+  }
+  function go(i){current=i;drawTabs();MODES[i].run()}
+
+  /* ---------- Fin d'exercice ---------- */
+  function finish(key,score,total,missed,again,msgOverride,badge){
+    var pct=score/total;
+    var msg=msgOverride||(pct>=.9?"Excellent ! Tu es prêt(e) pour le test."
+      :pct>=.7?"Très bien. Relis les questions à revoir ci-dessous."
+      :"Continue à t'entraîner. Relis les règles en haut de la page, puis recommence.");
+    scores[key]=badge||(score+"/"+total);
+    drawTabs();
+    var html='<div class="done"><p class="big">'+(badge?badge:score+" / "+total)+'</p><p>'+msg+'</p>';
+    if(missed&&missed.length){
+      html+='<h3>À revoir</h3><ul>'+missed.map(function(m){return "<li>"+m+"</li>"}).join("")+'</ul>';
+    }
+    html+='<div class="row"><button class="btn" id="again" type="button">Recommencer</button>'
+      +(current<MODES.length-1?'<button class="btn ghost" id="nextmode" type="button">Exercice suivant</button>':"")+'</div></div>';
+    stage.innerHTML=html;
+    document.getElementById("again").addEventListener("click",again);
+    var nm=document.getElementById("nextmode");
+    if(nm)nm.addEventListener("click",function(){go(current+1)});
+    document.getElementById("again").focus();
+  }
+
+  /* ---------- Moteur de quiz (choix multiple, blanc, tri, conjugaison) ---------- */
+  function quiz(key,list){
+    var i=0,score=0,res=null,missed=[];
+    function draw(){
+      if(i>=list.length){finish(key,score,list.length,missed,function(){MODES[current].run()});return}
+      var it=list[i],h="";
+      h+='<div class="prog"><span>Question '+(i+1)+' / '+list.length+'</span><div class="bar"><i style="width:'+(i/list.length*100)+'%"></i></div><span>'+score+' pt'+(score>1?"s":"")+'</span></div>';
+      if(it.big){h+='<p class="q">'+it.q+'</p><p class="card">'+it.big+'</p>'}
+      else if(it.input){h+='<p class="q">'+blank(it.q,res?it.a[0]:"",res&&!res.ok?"bad":"")+'</p>'}
+      else{h+='<p class="q">'+blank(it.q,res?it.rightText:"")+'</p>'}
+      if(it.input){
+        h+='<form class="entry" id="f" autocomplete="off"><input id="ans" type="text" aria-label="Ta réponse" autocapitalize="off" autocorrect="off" spellcheck="false"'
+          +(res?' value="'+res.val.replace(/"/g,"&quot;")+'" disabled':"")+'>'
+          +(res?"":'<button class="btn" type="submit">Vérifier</button><button class="btn ghost" type="button" id="hintbtn">Indice</button>')+'</form>';
+        h+='<p class="hint" id="hintbox" hidden>'+it.h+'</p>';
+      }else{
+        h+='<div class="opts">'+it.opts.map(function(o,k){
+          var c="opt "+(o.cls||"");
+          if(res){c+=o.ok?" right":(k===res.pick?" wrong":" dim")}
+          return '<button class="'+c+'" type="button" data-k="'+k+'"'+(res?" disabled":"")+'>'
+            +(o.cls?'<span class="t">'+o.t+'</span><span class="s">'+o.s+'</span>':o.t)+'</button>';
+        }).join("")+'</div>';
+      }
+      if(res){
+        h+='<div class="fb '+(res.ok?"good":"bad")+'" role="status"><strong>'+(res.ok?"Bravo !":"Pas tout à fait.")+'</strong>'+it.why+'</div>';
+        h+='<div class="row"><button class="btn" id="next" type="button">'+(i+1<list.length?"Suivant":"Voir mon score")+'</button></div>';
+      }
+      stage.innerHTML=h;
+      bind(it);
+    }
+    function answer(it,ok,extra){
+      res={ok:ok,pick:extra.pick,val:extra.val||""};
+      if(ok)score++;else missed.push((it.big?it.big+" → ":"")+it.why);
+      draw();
+    }
+    function bind(it){
+      var next=document.getElementById("next");
+      if(next){next.addEventListener("click",function(){res=null;i++;draw()});next.focus();return}
+      if(it.input){
+        var f=document.getElementById("f"),inp=document.getElementById("ans");
+        inp.focus();
+        document.getElementById("hintbtn").addEventListener("click",function(){document.getElementById("hintbox").hidden=false});
+        f.addEventListener("submit",function(e){
+          e.preventDefault();
+          var v=inp.value;
+          if(!norm(v)){inp.focus();return}
+          var ok=it.a.some(function(a){return norm(a)===norm(v)});
+          answer(it,ok,{val:v});
+        });
+      }else{
+        Array.prototype.forEach.call(stage.querySelectorAll(".opt"),function(b){
+          b.addEventListener("click",function(){
+            var k=+b.getAttribute("data-k");
+            answer(it,it.opts[k].ok,{pick:k});
+          });
+        });
+      }
+    }
+    draw();
+  }
+
+  /* ---------- Associer ---------- */
+  function match(){
+    var sel=null,done=0,errors=0,rights=shuffle(PAIRS),lefts=shuffle(PAIRS);
+    var h='<p class="q">Associe chaque mot à la bonne structure.</p><div class="match"><div class="col" id="L">'
+      +lefts.map(function(p){return '<button class="pick" type="button" data-id="'+p.id+'" data-s="L">'+p.w+'</button>'}).join("")
+      +'</div><div class="col" id="R">'
+      +rights.map(function(p){return '<button class="pick" type="button" data-id="'+p.id+'" data-s="R">'+p.k+'</button>'}).join("")
+      +'</div></div><p class="mm" id="mm">Erreurs : 0</p>';
+    stage.innerHTML=h;
+    var picks=stage.querySelectorAll(".pick");
+    function find(s,id){return stage.querySelector('.pick[data-s="'+s+'"][data-id="'+id+'"]')}
+    Array.prototype.forEach.call(picks,function(b){
+      b.addEventListener("click",function(){
+        var s=b.getAttribute("data-s"),id=b.getAttribute("data-id");
+        if(s==="L"){
+          Array.prototype.forEach.call(stage.querySelectorAll('.pick[data-s="L"]'),function(x){x.classList.remove("sel")});
+          sel=id;b.classList.add("sel");return;
+        }
+        if(sel===null){
+          var l=stage.querySelector('.pick[data-s="L"]:not(:disabled)');
+          if(l)l.focus();
+          return;
+        }
+        var lb=find("L",sel);
+        if(sel===id){
+          var cls=CATS[PAIRS[+id].c].cls;
+          [lb,b].forEach(function(x){x.classList.remove("sel");x.classList.remove("shake");x.classList.add(cls);x.disabled=true});
+          sel=null;done++;
+          if(done===PAIRS.length){
+            setTimeout(function(){
+              finish("match",PAIRS.length-Math.min(errors,PAIRS.length),PAIRS.length,[],match,
+                errors===0?"Parfait, aucune erreur !":"Tu as terminé. Recommence pour viser zéro erreur.",
+                errors===0?"0 erreur":errors+(errors>1?" erreurs":" erreur"));
+            },500);
+          }
+        }else{
+          errors++;
+          document.getElementById("mm").textContent="Erreurs : "+errors;
+          [lb,b].forEach(function(x){x.classList.remove("shake");void x.offsetWidth;x.classList.add("shake")});
+          lb.classList.remove("sel");sel=null;
+        }
+      });
+    });
+  }
+
+  drawTabs();
+  MODES[0].run();
+})();
+</script>
+
+</body></html>
